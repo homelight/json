@@ -165,6 +165,17 @@ func Marshal(v interface{}) ([]byte, error) {
 	return e.Bytes(), nil
 }
 
+// MarshalSafeCollections is like Marshal except it will marshal nil maps and
+// slices as '{}' and '[]' respectfully instead of 'null'
+func MarshalSafeCollections(v interface{}) ([]byte, error) {
+	e := &encodeState{}
+	err := e.marshal(v, encOpts{escapeHTML: true, nilSafeCollection: true})
+	if err != nil {
+		return nil, err
+	}
+	return e.Bytes(), nil
+}
+
 // MarshalIndent is like Marshal but applies Indent to format the output.
 func MarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
 	b, err := Marshal(v)
@@ -328,6 +339,9 @@ type encOpts struct {
 	quoted bool
 	// escapeHTML causes '<', '>', and '&' to be escaped in JSON strings.
 	escapeHTML bool
+	// nilSafeCollection marshals a nil slices and maps into '[]' and '{}'
+	// respectfully instead of 'null'
+	nilSafeCollection bool
 }
 
 type encoderFunc func(e *encodeState, v reflect.Value, opts encOpts)
@@ -657,7 +671,11 @@ type mapEncoder struct {
 
 func (me *mapEncoder) encode(e *encodeState, v reflect.Value, opts encOpts) {
 	if v.IsNil() {
-		e.WriteString("null")
+		if opts.nilSafeCollection {
+			e.WriteString("{}")
+		} else {
+			e.WriteString("null")
+		}
 		return
 	}
 	e.WriteByte('{')
@@ -698,9 +716,13 @@ func newMapEncoder(t reflect.Type) encoderFunc {
 	return me.encode
 }
 
-func encodeByteSlice(e *encodeState, v reflect.Value, _ encOpts) {
+func encodeByteSlice(e *encodeState, v reflect.Value, opts encOpts) {
 	if v.IsNil() {
-		e.WriteString("null")
+		if opts.nilSafeCollection {
+			e.WriteString("[]")
+		} else {
+			e.WriteString("null")
+		}
 		return
 	}
 	s := v.Bytes()
@@ -727,7 +749,11 @@ type sliceEncoder struct {
 
 func (se *sliceEncoder) encode(e *encodeState, v reflect.Value, opts encOpts) {
 	if v.IsNil() {
-		e.WriteString("null")
+		if opts.nilSafeCollection {
+			e.WriteString("[]")
+		} else {
+			e.WriteString("null")
+		}
 		return
 	}
 	se.arrayEnc(e, v, opts)
