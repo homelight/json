@@ -339,7 +339,8 @@ type encOpts struct {
 	quoted bool
 	// escapeHTML causes '<', '>', and '&' to be escaped in JSON strings.
 	escapeHTML bool
-	// nilSafeCollection marshals a nill slice ([]interface{}) into '[]' instead of 'null'
+	// nilSafeCollection marshals a nil slices and maps into '[]' and '{}'
+	// respectfully instead of 'null'
 	nilSafeCollection bool
 }
 
