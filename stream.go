@@ -166,9 +166,10 @@ func nonSpace(b []byte) bool {
 
 // An Encoder writes JSON values to an output stream.
 type Encoder struct {
-	w          io.Writer
-	err        error
-	escapeHTML bool
+	w              io.Writer
+	err            error
+	escapeHTML     bool
+	rescueNilSlice bool
 
 	indentBuf    *bytes.Buffer
 	indentPrefix string
@@ -190,7 +191,7 @@ func (enc *Encoder) Encode(v interface{}) error {
 		return enc.err
 	}
 	e := newEncodeState()
-	err := e.marshal(v, encOpts{escapeHTML: enc.escapeHTML})
+	err := e.marshal(v, encOpts{escapeHTML: enc.escapeHTML, rescueNilSlice: enc.rescueNilSlice})
 	if err != nil {
 		return err
 	}
@@ -239,6 +240,12 @@ func (enc *Encoder) SetIndent(prefix, indent string) {
 // of the output, SetEscapeHTML(false) disables this behavior.
 func (enc *Encoder) SetEscapeHTML(on bool) {
 	enc.escapeHTML = on
+}
+
+// SetRescueNilSlice specifies whether to represent nil slices as `null` (default)
+// or `[]` (flag on) when marshaling json.
+func (enc *Encoder) SetRescueNilSlice(on bool) {
+	enc.rescueNilSlice = on
 }
 
 // RawMessage is a raw encoded JSON value.

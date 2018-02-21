@@ -123,6 +123,42 @@ func TestEncoderSetEscapeHTML(t *testing.T) {
 	}
 }
 
+func TestEncoderRescueNilSlice(t *testing.T) {
+	var (
+		nilSlice  []interface{}
+		pNilSlice *[]interface{}
+	)
+	for _, tt := range []struct {
+		name        string
+		v           interface{}
+		want        string
+		rescuedWant string
+	}{
+		{"nilSlice", nilSlice, `null`, `[]`},
+		{"nonNilSlice", []interface{}{}, `[]`, `[]`},
+		{"sliceWithValues", []interface{}{1, 2, 3}, `[1,2,3]`, `[1,2,3]`},
+		{"pNilSlice", pNilSlice, `null`, `null`},
+	} {
+		var buf bytes.Buffer
+		enc := NewEncoder(&buf)
+		if err := enc.Encode(tt.v); err != nil {
+			t.Fatalf("Encode(%s): %s", tt.name, err)
+		}
+		if got := strings.TrimSpace(buf.String()); got != tt.want {
+			t.Errorf("Encode(%s) = %#q, want %#q", tt.name, got, tt.want)
+		}
+		buf.Reset()
+		enc.SetRescueNilSlice(true)
+		if err := enc.Encode(tt.v); err != nil {
+			t.Fatalf("SetRescueNilSlice(true) Encode(%s): %s", tt.name, err)
+		}
+		if got := strings.TrimSpace(buf.String()); got != tt.rescuedWant {
+			t.Errorf("SetRescueNilSlice(true) Encode(%s) = %#q, want %#q",
+				tt.name, got, tt.want)
+		}
+	}
+}
+
 func TestDecoder(t *testing.T) {
 	for i := 0; i <= len(streamTest); i++ {
 		// Use stream without newlines as input,

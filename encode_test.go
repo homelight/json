@@ -978,3 +978,35 @@ func TestMarshalRawMessageValue(t *testing.T) {
 		}
 	}
 }
+
+func TestMarshalSafeSlice(t *testing.T) {
+	var (
+		nilSlice  []interface{}
+		pNilSlice *[]interface{}
+	)
+	type nilSliceStruct struct {
+		NilSlice []interface{} `json:"nil_slice"`
+	}
+
+	tests := []struct {
+		in   interface{}
+		want string
+	}{
+		{nilSlice, "[]"},
+		{[]interface{}{}, "[]"},
+		{make([]interface{}, 0), "[]"},
+		{[]int{1, 2, 3}, "[1,2,3]"},
+		{pNilSlice, "null"},
+		{nilSliceStruct{}, "{\"nil_slice\":[]}"},
+	}
+
+	for i, tt := range tests {
+		b, err := MarshalSafeSlice(tt.in)
+		if err != nil {
+			t.Errorf("test %d, unexpected failure: %v", i, err)
+		}
+		if got := string(b); got != tt.want {
+			t.Errorf("test %d, Marshal(%#v) = %q, want %q", i, tt.in, got, tt.want)
+		}
+	}
+}
