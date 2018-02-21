@@ -979,14 +979,22 @@ func TestMarshalRawMessageValue(t *testing.T) {
 	}
 }
 
-func TestMarshalSafeSlice(t *testing.T) {
+func TestMarshalSafeCollections(t *testing.T) {
 	var (
 		nilSlice  []interface{}
 		pNilSlice *[]interface{}
+		nilMap    map[string]interface{}
+		pNilMap   *map[string]interface{}
 	)
-	type nilSliceStruct struct {
-		NilSlice []interface{} `json:"nil_slice"`
-	}
+
+	type (
+		nilSliceStruct struct {
+			NilSlice []interface{} `json:"nil_slice"`
+		}
+		nilMapStruct struct {
+			NilMap map[string]interface{} `json:"nil_map"`
+		}
+	)
 
 	tests := []struct {
 		in   interface{}
@@ -998,10 +1006,16 @@ func TestMarshalSafeSlice(t *testing.T) {
 		{[]int{1, 2, 3}, "[1,2,3]"},
 		{pNilSlice, "null"},
 		{nilSliceStruct{}, "{\"nil_slice\":[]}"},
+		{nilMap, "{}"},
+		{map[string]interface{}{}, "{}"},
+		{make(map[string]interface{}, 0), "{}"},
+		{map[string]interface{}{"1": 1, "2": 2, "3": 3}, "{\"1\":1,\"2\":2,\"3\":3}"},
+		{pNilMap, "null"},
+		{nilMapStruct{}, "{\"nil_map\":{}}"},
 	}
 
 	for i, tt := range tests {
-		b, err := MarshalSafeSlice(tt.in)
+		b, err := MarshalSafeCollections(tt.in)
 		if err != nil {
 			t.Errorf("test %d, unexpected failure: %v", i, err)
 		}

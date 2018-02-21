@@ -123,10 +123,12 @@ func TestEncoderSetEscapeHTML(t *testing.T) {
 	}
 }
 
-func TestEncoderRescueNilSlice(t *testing.T) {
+func TestEncoderSetNilSafeCollection(t *testing.T) {
 	var (
 		nilSlice  []interface{}
 		pNilSlice *[]interface{}
+		nilMap    map[string]interface{}
+		pNilMap   *map[string]interface{}
 	)
 	for _, tt := range []struct {
 		name        string
@@ -134,10 +136,14 @@ func TestEncoderRescueNilSlice(t *testing.T) {
 		want        string
 		rescuedWant string
 	}{
-		{"nilSlice", nilSlice, `null`, `[]`},
-		{"nonNilSlice", []interface{}{}, `[]`, `[]`},
-		{"sliceWithValues", []interface{}{1, 2, 3}, `[1,2,3]`, `[1,2,3]`},
-		{"pNilSlice", pNilSlice, `null`, `null`},
+		{"nilSlice", nilSlice, "null", "[]"},
+		{"nonNilSlice", []interface{}{}, "[]", "[]"},
+		{"sliceWithValues", []interface{}{1, 2, 3}, "[1,2,3]", "[1,2,3]"},
+		{"pNilSlice", pNilSlice, "null", "null"},
+		{"nilMap", nilMap, "null", "{}"},
+		{"nonNilMap", map[string]interface{}{}, "{}", "{}"},
+		{"mapWithValues", map[string]interface{}{"1": 1, "2": 2, "3": 3}, "{\"1\":1,\"2\":2,\"3\":3}", "{\"1\":1,\"2\":2,\"3\":3}"},
+		{"pNilMap", pNilMap, "null", "null"},
 	} {
 		var buf bytes.Buffer
 		enc := NewEncoder(&buf)
@@ -148,12 +154,12 @@ func TestEncoderRescueNilSlice(t *testing.T) {
 			t.Errorf("Encode(%s) = %#q, want %#q", tt.name, got, tt.want)
 		}
 		buf.Reset()
-		enc.SetRescueNilSlice(true)
+		enc.SetNilSafeCollection(true)
 		if err := enc.Encode(tt.v); err != nil {
-			t.Fatalf("SetRescueNilSlice(true) Encode(%s): %s", tt.name, err)
+			t.Fatalf("SetNilSafeCollection(true) Encode(%s): %s", tt.name, err)
 		}
 		if got := strings.TrimSpace(buf.String()); got != tt.rescuedWant {
-			t.Errorf("SetRescueNilSlice(true) Encode(%s) = %#q, want %#q",
+			t.Errorf("SetNilSafeCollection(true) Encode(%s) = %#q, want %#q",
 				tt.name, got, tt.want)
 		}
 	}
