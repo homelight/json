@@ -1,3 +1,3 @@
 module github.com/helloeave/json
 
-go 1.12.9
+go 1.13

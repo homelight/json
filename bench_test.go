@@ -81,6 +81,7 @@ func codeInit() {
 }
 
 func BenchmarkCodeEncoder(b *testing.B) {
+	b.ReportAllocs()
 	if codeJSON == nil {
 		b.StopTimer()
 		codeInit()
@@ -98,6 +99,7 @@ func BenchmarkCodeEncoder(b *testing.B) {
 }
 
 func BenchmarkCodeMarshal(b *testing.B) {
+	b.ReportAllocs()
 	if codeJSON == nil {
 		b.StopTimer()
 		codeInit()
@@ -132,6 +134,7 @@ func benchMarshalBytes(n int) func(*testing.B) {
 }
 
 func BenchmarkMarshalBytes(b *testing.B) {
+	b.ReportAllocs()
 	// 32 fits within encodeState.scratch.
 	b.Run("32", benchMarshalBytes(32))
 	// 256 doesn't fit in encodeState.scratch, but is small enough to
@@ -142,6 +145,7 @@ func BenchmarkMarshalBytes(b *testing.B) {
 }
 
 func BenchmarkCodeDecoder(b *testing.B) {
+	b.ReportAllocs()
 	if codeJSON == nil {
 		b.StopTimer()
 		codeInit()
@@ -166,6 +170,7 @@ func BenchmarkCodeDecoder(b *testing.B) {
 }
 
 func BenchmarkUnicodeDecoder(b *testing.B) {
+	b.ReportAllocs()
 	j := []byte(`"\uD83D\uDE01"`)
 	b.SetBytes(int64(len(j)))
 	r := bytes.NewReader(j)
@@ -181,6 +186,7 @@ func BenchmarkUnicodeDecoder(b *testing.B) {
 }
 
 func BenchmarkDecoderStream(b *testing.B) {
+	b.ReportAllocs()
 	b.StopTimer()
 	var buf bytes.Buffer
 	dec := NewDecoder(&buf)
@@ -203,6 +209,7 @@ func BenchmarkDecoderStream(b *testing.B) {
 }
 
 func BenchmarkCodeUnmarshal(b *testing.B) {
+	b.ReportAllocs()
 	if codeJSON == nil {
 		b.StopTimer()
 		codeInit()
@@ -220,6 +227,7 @@ func BenchmarkCodeUnmarshal(b *testing.B) {
 }
 
 func BenchmarkCodeUnmarshalReuse(b *testing.B) {
+	b.ReportAllocs()
 	if codeJSON == nil {
 		b.StopTimer()
 		codeInit()
@@ -233,10 +241,11 @@ func BenchmarkCodeUnmarshalReuse(b *testing.B) {
 			}
 		}
 	})
-	// TODO(bcmills): Is there a missing b.SetBytes here?
+	b.SetBytes(int64(len(codeJSON)))
 }
 
 func BenchmarkUnmarshalString(b *testing.B) {
+	b.ReportAllocs()
 	data := []byte(`"hello, world"`)
 	b.RunParallel(func(pb *testing.PB) {
 		var s string
@@ -249,6 +258,7 @@ func BenchmarkUnmarshalString(b *testing.B) {
 }
 
 func BenchmarkUnmarshalFloat64(b *testing.B) {
+	b.ReportAllocs()
 	data := []byte(`3.14`)
 	b.RunParallel(func(pb *testing.PB) {
 		var f float64
@@ -261,6 +271,7 @@ func BenchmarkUnmarshalFloat64(b *testing.B) {
 }
 
 func BenchmarkUnmarshalInt64(b *testing.B) {
+	b.ReportAllocs()
 	data := []byte(`3`)
 	b.RunParallel(func(pb *testing.PB) {
 		var x int64
@@ -299,6 +310,7 @@ func BenchmarkUnmapped(b *testing.B) {
 }
 
 func BenchmarkTypeFieldsCache(b *testing.B) {
+	b.ReportAllocs()
 	var maxTypes int = 1e6
 
 	// Dynamically generate many new types.
