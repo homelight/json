@@ -118,6 +118,11 @@ func TestEncoderSetEscapeHTML(t *testing.T) {
 		Ptr    strPtrMarshaler
 	}{`"<str>"`, `"<str>"`}
 
+	// https://golang.org/issue/34154
+	stringOption := struct {
+		Bar string `json:"bar,string"`
+	}{`<html>foobar</html>`}
+
 	for _, tt := range []struct {
 		name       string
 		v          interface{}
@@ -137,11 +142,17 @@ func TestEncoderSetEscapeHTML(t *testing.T) {
 			`{"NonPtr":"\u003cstr\u003e","Ptr":"\u003cstr\u003e"}`,
 			`{"NonPtr":"<str>","Ptr":"<str>"}`,
 		},
+		{
+			"stringOption", stringOption,
+			`{"bar":"\"\\u003chtml\\u003efoobar\\u003c/html\\u003e\""}`,
+			`{"bar":"\"<html>foobar</html>\""}`,
+		},
 	} {
 		var buf bytes.Buffer
 		enc := NewEncoder(&buf)
 		if err := enc.Encode(tt.v); err != nil {
-			t.Fatalf("Encode(%s): %s", tt.name, err)
+			t.Errorf("Encode(%s): %s", tt.name, err)
+			continue
 		}
 		if got := strings.TrimSpace(buf.String()); got != tt.wantEscape {
 			t.Errorf("Encode(%s) = %#q, want %#q", tt.name, got, tt.wantEscape)
@@ -149,7 +160,8 @@ func TestEncoderSetEscapeHTML(t *testing.T) {
 		buf.Reset()
 		enc.SetEscapeHTML(false)
 		if err := enc.Encode(tt.v); err != nil {
-			t.Fatalf("SetEscapeHTML(false) Encode(%s): %s", tt.name, err)
+			t.Errorf("SetEscapeHTML(false) Encode(%s): %s", tt.name, err)
+			continue
 		}
 		if got := strings.TrimSpace(buf.String()); got != tt.want {
 			t.Errorf("SetEscapeHTML(false) Encode(%s) = %#q, want %#q",
