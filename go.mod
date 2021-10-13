@@ -1,3 +1,3 @@
-module github.com/helloeave/json
+module github.com/homelight/json
 
-go 1.13
+go 1.15
