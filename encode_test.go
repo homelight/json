@@ -7,6 +7,7 @@ package json
 import (
 	"bytes"
 	"encoding"
+	"encoding/base64"
 	"fmt"
 	"log"
 	"math"
@@ -1208,6 +1209,8 @@ func TestMarshalSafeCollections(t *testing.T) {
 		pNilSlice *[]interface{}
 		nilMap    map[string]interface{}
 		pNilMap   *map[string]interface{}
+		nilBytes  []byte
+		pNilBytes *[]byte
 	)
 	type (
 		nilSliceStruct struct {
@@ -1215,6 +1218,9 @@ func TestMarshalSafeCollections(t *testing.T) {
 		}
 		nilMapStruct struct {
 			NilMap map[string]interface{} `json:"nil_map"`
+		}
+		nilBytesStruct struct {
+			NilBytes []byte `json:"nil_bytes"`
 		}
 	)
 	tests := []struct {
@@ -1226,13 +1232,18 @@ func TestMarshalSafeCollections(t *testing.T) {
 		{make([]interface{}, 0), "[]"},
 		{[]int{1, 2, 3}, "[1,2,3]"},
 		{pNilSlice, "null"},
-		{nilSliceStruct{}, "{\"nil_slice\":[]}"},
+		{nilSliceStruct{}, `{"nil_slice":[]}`},
 		{nilMap, "{}"},
 		{map[string]interface{}{}, "{}"},
 		{make(map[string]interface{}, 0), "{}"},
-		{map[string]interface{}{"1": 1, "2": 2, "3": 3}, "{\"1\":1,\"2\":2,\"3\":3}"},
+		{map[string]interface{}{"1": 1, "2": 2, "3": 3}, `{"1":1,"2":2,"3":3}`},
 		{pNilMap, "null"},
-		{nilMapStruct{}, "{\"nil_map\":{}}"},
+		{nilMapStruct{}, `{"nil_map":{}}`},
+		{nilBytes, `""`},
+		{[]byte{}, `""`},
+		{[]byte("hello"), `"` + base64.StdEncoding.EncodeToString([]byte("hello")) + `"`},
+		{pNilBytes, `null`},
+		{nilBytesStruct{}, `{"nil_bytes":""}`},
 	}
 	for i, tt := range tests {
 		b, err := MarshalSafeCollections(tt.in)
